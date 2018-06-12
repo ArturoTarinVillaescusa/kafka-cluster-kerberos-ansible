@@ -1,0 +1,18 @@
+;
+; BIND forward data file for local loopback interface
+;
+$TTL 604800
+@ IN SOA {{ inventory_hostname }}.{{ fqdn }}. root.{{ fqdn }}. (
+1 ; Serial
+604800 ; Refresh
+86400 ; Retry
+2419200 ; Expire
+604800 ) ; Negative Cache TTL
+;
+
+@ IN NS {{ inventory_hostname }}.{{ fqdn }}.
+{% for item in play_hosts %}
+{% set short_name = item.split('.') %}
+{{ short_name[0] }} IN A {{ hostvars[item]['ansible_host'] }}
+{% endfor %}
+

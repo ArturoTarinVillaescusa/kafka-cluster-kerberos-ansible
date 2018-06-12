@@ -1,0 +1,66 @@
+---
+# Zookeeper cluster installation and configuration
+
+- name: Create the "zookeeper" group
+  group:
+    name: zookeeper
+    state: present
+
+- name: Create the "zookeeper" user
+  user:
+    name: zookeeper
+    group: zookeeper
+    state: present
+
+- name: Create the /etc/systemd/system/zoo.service
+  copy:
+    src: files/zoo.service
+    dest: /etc/systemd/system/zoo.service
+
+- name: Create the {{ zookeeper_app_dir }}/config/zookeeper.properties from zookeeper.properties
+  copy:
+    src: zookeeper.properties
+    dest: "{{ zookeeper_app_dir }}/config/zookeeper.properties"
+
+- name: Create the {{ zookeeper_data_dir }} folder
+  file:
+    path: "{{ zookeeper_data_dir }}"
+    state: directory
+    owner: zookeeper
+    group: zookeeper
+    mode: 0775
+
+- name: Configure {{ zookeeper_app_dir }}/config/zookeeper.properties
+  lineinfile:
+    dest: "{{ zookeeper_app_dir }}/config/zookeeper.properties"
+    # line: "server.{{ item  | regex_replace('broker', '') }}={{ item }}:2888:3888"
+    line: "server.{{ item[-1] }}={{ item }}.{{ fqdn }}:2888:3888"
+    insertafter: EOF
+  with_items: "{{groups['all']}}"
+
+- name: Configure {{ zookeeper_app_dir }}/config/zookeeper.properties
+  replace:
+    dest: "{{ zookeeper_app_dir }}/config/zookeeper.properties"
+    regexp: '{{ inventory_hostname }}.{{ fqdn }}:2888:3888'
+    replace: '0.0.0.0:2888:3888'
+    backup: no
+
+- name: Create the {{ zookeeper_data_dir }}/myid file
+  copy:
+    dest: "{{ zookeeper_data_dir }}/myid"
+    # content: |      {{ inventory_hostname  | regex_replace('broker', '') }}
+    content: |
+      {{ inventory_hostname[-1] }}
+
+- name: Enable automatically starting the Zookeeper service
+  # command: systemctl enable zoo
+  service:
+    name: zoo
+    enabled: yes
+
+- name: Reboot broker
+  shell: 'sleep 1 && shutdown -r now "Reboot triggered by Ansible" && sleep 1'
+  async: 1
+  poll: 0
+  become: true
+

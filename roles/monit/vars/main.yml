@@ -1,0 +1,17 @@
+---
+kafka_app_dir: /opt/kafka
+zookeeper_app_dir: /opt/kafka
+
+fqdn: "example.com"
+realm: "ARTURO.COM"
+krb_host: "broker1.example.com"
+krb_realm: "{{ realm }}"
+krb_master_password: "arturo"
+principals_password: "arturo"
+keytabs_folder: "/etc/security/keytabs"
+bind_folder: "/etc/bind"
+bind_cache_folder: "/var/cache/bind"
+zone_forward: "{{ fqdn }}"
+zone_reverse: "{{ ansible_host.split('.')[2] }}.{{ ansible_host.split('.')[1] }}.{{ ansible_host.split('.')[0] }}.in-addr.arpa"
+bind_forward_file: "db.{{ zone_forward }}"
+bind_reverse_file: "db.{{ ansible_host.split('.')[0] }}.{{ ansible_host.split('.')[1] }}.{{ ansible_host.split('.')[2] }}"

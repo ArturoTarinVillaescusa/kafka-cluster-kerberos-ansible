@@ -1,0 +1,7 @@
+[kafkabrokers]
+#broker[1:20] ansible_ssh_user=arturo
+broker1 ansible_host=192.168.0.116 ansible_ssh_user=arturo
+broker2 ansible_host=192.168.0.117 ansible_ssh_user=arturo
+broker3 ansible_host=192.168.0.118 ansible_ssh_user=arturo
+# broker4 ansible_host=192.168.0.119 ansible_ssh_user=arturo
+# broker5 ansible_host=192.168.0.120 ansible_ssh_user=arturo

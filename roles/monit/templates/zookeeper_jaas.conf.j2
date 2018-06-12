@@ -1,0 +1,13 @@
+Server {
+  com.sun.security.auth.module.Krb5LoginModule required
+  useKeyTab=true
+  keyTab="{{ keytabs_folder }}/zookeeper.keytab"
+  storeKey=true
+  useTicketCache=false
+  principal="zookeeper/{{ inventory_hostname }}.{{ fqdn }}@{{ realm }}";
+};
+
+Client {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useTicketCache=true;
+};

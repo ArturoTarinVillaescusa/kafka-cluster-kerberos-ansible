@@ -1,0 +1,17 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+zone "{{ zone_forward }}" {
+type master;
+file "{{ bind_forward_file }}";
+};
+
+zone "{{ zone_reverse }}" {
+type master;
+file "{{ bind_reverse_file }}";
+};

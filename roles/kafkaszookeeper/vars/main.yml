@@ -1,0 +1,4 @@
+# The global variable file for a Zookeeeper cluster installation
+zookeeper_app_dir: /opt/kafka
+zookeeper_data_dir: /opt/data/zookeeper
+fqdn: "example.com"

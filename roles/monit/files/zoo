@@ -1,0 +1,8 @@
+check process zoo
+        matching "java -Dzookeeper.log.dir="
+        start program = "/opt/kafka/bin/startZookeeperWithKerberosConfiguration.sh"
+        stop program = "export KAFKA_OPTS='-Djava.security.auth.login.config=/opt/kafka/config/zookeeper_jaas.conf';/opt/kafka/bin/zookeeper-server-stop.sh /opt/kafka/config/zookeeper.properties"
+        alert atarin.mistralbs@goldcar.com with reminder on 500 cycles
+
+
+

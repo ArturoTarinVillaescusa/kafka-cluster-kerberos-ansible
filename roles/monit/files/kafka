@@ -1,0 +1,4 @@
+check process kafka matching "java -Xmx1G.*kafka"
+        start program = "/opt/kafka/bin/startKafkaWithKerberosConfiguration.sh"
+        stop program = "export KAFKA_OPTS='-Djava.security.auth.login.config=/opt/kafka/config/kafka_server_jaas.conf';/opt/kafka/bin/kafka-server-stop.sh"
+        alert atarin.mistralbs@goldcar.com with reminder on 500 cycles

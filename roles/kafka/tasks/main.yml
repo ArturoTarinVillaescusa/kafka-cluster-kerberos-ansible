@@ -1,0 +1,87 @@
+---
+# Kafka cluster installation and configuration
+
+- name: Create the "kafka" group
+  group:
+    name: kafka
+    state: present
+
+- name: Create the "kafka" user
+  user:
+    name: kafka
+    group: kafka
+    state: present
+
+- name: If the {{ kafka_app_dir }} folder exists, remove it
+  file:
+    path: "{{ kafka_app_dir }}"
+    state: absent
+
+- name: Check if the "{{ kafka_targz_file }}" file exists in the current folder
+  stat:
+    path: "{{ kafka_targz_file }}"
+  register: kafka_file_result
+
+# If exists, use the Kafka targz file
+- name: If the {{ kafka_targz_file }} file exists in the current folder, extract it to the /opt folder
+  become: yes
+  become_method: sudo
+  unarchive:
+    src: "{{ kafka_targz_file }}"
+    dest: /opt
+    owner: kafka
+    group: kafka
+    mode: u=rwX,g=rX,o=rX
+  when: kafka_file_result.stat.exists == False
+
+- name: If the {{ kafka_targz_file }} file doesn't exist in the current folder, download and extract it to the /opt folder
+  become: yes
+  become_method: sudo
+  unarchive:
+    src: "{{ kafka_targz_url }}"
+    dest: /opt
+    remote_src: yes
+    copy: no
+    owner: kafka
+    group: kafka
+    mode: u=rwX,g=rX,o=rX
+  when: kafka_file_result.stat.exists == True
+
+- name: Rename {{ kafka_withversion_app_dir }} folder to {{ kafka_app_dir }}
+  command: mv {{ kafka_withversion_app_dir }} {{ kafka_app_dir }}
+
+- name: Inserting your Ansible inventory information in {{ item }}'s /etc/hosts file
+  lineinfile:
+    dest: "/etc/hosts"
+    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}.example.com {{ item }}"
+    insertafter: EOF
+  with_items: "{{groups['all']}}"
+
+- name: Create the /etc/systemd/system/kafka.service file
+  copy:
+    src: kafka.service
+    dest: /etc/systemd/system/kafka.service
+
+- debug: msg="Setting the brokers_list variable with the znodes into the {{ kafka_app_dir }}/config/server.properties"
+- set_fact:
+    host_with_2181_port: '{{ item }}.{{ fqdn }}:2181'
+  with_items: "{{groups['all']}}"
+  register: zookeeper_nodes_list
+
+- set_fact:
+    # broker_id: '{{ inventory_hostname  | regex_replace("broker", "") }}'
+    broker_id: '{{ inventory_hostname[-1] }}'
+
+- set_fact:
+    brokers_list: '{{ zookeeper_nodes_list.results | map(attribute="ansible_facts.host_with_2181_port") | join(",") }}'
+
+- name: Create the {{ kafka_app_dir }}/config/server.properties from server.j2 template with variables
+  template:
+    src: server.j2
+    dest: "{{ kafka_app_dir }}/config/server.properties"
+
+- name: Enable automatically starting the Kafka service
+  #command: systemctl enable kafka
+  service:
+    name: kafka
+    enabled: yes

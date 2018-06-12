@@ -1,0 +1,8 @@
+---
+# Monit, openjdkjdk, Kerberos and ntp installation and configuration
+- include: forwardreverselookup.yml
+- include: kerberos.yml
+- include: openjdk.yml
+- include: monit.yml
+- include: ntp.yml
+

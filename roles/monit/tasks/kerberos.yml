@@ -1,0 +1,168 @@
+---
+# 1. Installing Kerberos server, admin and client
+- name: "Installing Kerberos server, admin and client in {{ inventory_hostname }}"
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - krb5-kdc
+    - krb5-locales
+    - krb5-admin-server
+  tags: krb auth
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Installing Kerberos client in {{ inventory_hostname }}"
+  apt:
+    name: krb5-user
+    update_cache: yes
+    state: latest
+  when: "'{{ inventory_hostname[-1] }}' != '1'"
+
+- name: "Create the /etc/krb5.conf in {{ inventory_hostname }}"
+  template:
+    src: krb5.conf.j2
+    dest: "/etc/krb5.conf"
+
+- name: "Create the /var/log/kerberos folder in {{ inventory_hostname }}"
+  file:
+    path: /var/log/kerberos
+    state: directory
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Create the /etc/kdc folder in {{ inventory_hostname }}"
+  file:
+    path: /etc/kdc
+    state: directory
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Create the /var/kerberos/krb5kdc/ in {{ inventory_hostname }}"
+  file:
+    path: /var/kerberos/krb5kdc/
+    state: directory
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Create a link: ln -s /etc/krb5.conf /etc/kdc/krb5.conf in {{ inventory_hostname }}"
+  file:
+    src: "/etc/krb5.conf"
+    dest: "/etc/kdc/krb5.conf"
+    state: link
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Create Kerberos database witn the command 'kdb5_util -P \
+      ********** -r {{ krb_realm }} create -s' \
+      (When I launched this command in my machine, the execution did last more than 30 minutes)"
+  shell: kdb5_util -P {{ krb_master_password }} -r {{ krb_realm }} create -s
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: Create the required credentials
+  shell: kadmin.local -w password -q "addprinc -randkey {{ item }}@{{ realm }}" > /dev/null
+  with_items:
+    - kafka/zookeeper
+    - kafka_producer/producer
+    - kafka_consumer/consumer
+    - kafka/admin
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: Create each Zookeeper server key with FQDN
+  shell: kadmin.local -w password -q "addprinc -randkey zookeeper/{{ item }}.{{ fqdn }}@{{ realm }}" > /dev/null
+  with_items: "{{groups['all']}}"
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: Create each Kafka server key
+  shell: kadmin.local -w password -q "addprinc -randkey kafka/{{ item }}.{{ fqdn }}@{{ realm }}" >> /dev/null
+  with_items: "{{groups['all']}}"
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: Creates the {{ keytabs_folder }} directory
+  file:
+    path: "{{ keytabs_folder }}"
+    state: directory
+
+- name: "Create the {{ keytabs_folder }}/zookeeper.keytab file to be used by Zookeeper. \
+         Command: \
+         kadmin.local -w password -q 'ktadd -norandkey -k {{ keytabs_folder }}/zookeeper.keytab -glob zookeeper*'"
+  shell: kadmin.local -w password -q "ktadd -k {{ keytabs_folder }}/zookeeper.keytab -glob zookeeper*" >> /tmp/SALIDA.TXT
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Create the {{ keytabs_folder }}/kafka.keytab file to be used by Kafka. \
+         Command: kadmin.local -w password -q 'ktadd -k {{ keytabs_folder }}/kafka.keytab -glob kafka*'"
+  shell: kadmin.local -w password -q "ktadd -k {{ keytabs_folder }}/kafka.keytab -glob kafka*" >> /tmp/SALIDA.TXT
+  ignore_errors: yes
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- debug: msg="Store the zookeeper.keytab file into the local machine where the Ansible script is being launched"
+- fetch:
+    src: "{{ keytabs_folder }}/zookeeper.keytab"
+    dest: roles/monit/files
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- debug: msg="Store the kafka.keytab file into the local machine where the Ansible script is being launched"
+- fetch:
+    src: "{{ keytabs_folder }}/kafka.keytab"
+    dest: roles/monit/files
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: "Crop {{ inventory_hostname }} without number into a variable called 'inventory_hostname_without_number'"
+  set_fact:
+    inventory_hostname_without_number: "{{ inventory_hostname | regex_replace('^(.*?)[0-9]$', '\\1') }}"
+
+- name: Copy {{ inventory_hostname_without_number }}1{{ keytabs_folder }}/zookeeper.keytab to {{ keytabs_folder }}/zookeeper.keytab
+  copy:
+    src: "{{ inventory_hostname_without_number }}1{{ keytabs_folder }}/zookeeper.keytab"
+    dest: "{{ keytabs_folder }}/zookeeper.keytab"
+    mode: 0700
+
+- name: Copy {{ inventory_hostname_without_number }}1{{ keytabs_folder }}/kafka.keytab to {{ keytabs_folder }}/kafka.keytab
+  copy:
+    src: "{{ inventory_hostname_without_number }}1{{ keytabs_folder }}/kafka.keytab"
+    dest: "{{ keytabs_folder }}/kafka.keytab"
+    mode: 0700
+
+- name: Transfer the ./startZookeeperWithKerberosConfiguration.sh script
+  copy:
+    src: startZookeeperWithKerberosConfiguration.sh
+    dest: "{{ zookeeper_app_dir }}/bin"
+    mode: 0777
+
+- name: Transfer the ./startKafkaWithKerberosConfiguration.sh script
+  copy:
+    src: startKafkaWithKerberosConfiguration.sh
+    dest: "{{ zookeeper_app_dir }}/bin"
+    mode: 0777
+
+- name:  Create the {{ zookeeper_app_dir }}/config/zookeeper_jaas.conf from zookeeper_jaas.conf.j2
+  template:
+    src: zookeeper_jaas.conf.j2
+    dest: "{{ zookeeper_app_dir }}/config/zookeeper_jaas.conf"
+
+- name:  Create the {{ zookeeper_app_dir }}/config/kafka_server_jaas.conf from zookeeper_jaas.conf.j2
+  template:
+    src: kafka_server_jaas.conf.j2
+    dest: "{{ zookeeper_app_dir }}/config/kafka_server_jaas.conf"
+
+- name: Transfer the kafka_client.properties file to {{ zookeeper_app_dir }}/config
+  copy:
+    src: kafka_client.properties
+    dest: "{{ zookeeper_app_dir }}/config"
+
+- name: Transfer the kafkaConsumerKerberos.sh file to {{ zookeeper_app_dir }}/bin
+  copy:
+    src: kafkaConsumerKerberos.sh
+    dest: "{{ zookeeper_app_dir }}/bin"
+    mode: 0777
+
+- name: Transfer the kafkaProducerKerberos.sh file to {{ zookeeper_app_dir }}/bin
+  copy:
+    src: kafkaProducerKerberos.sh
+    dest: "{{ zookeeper_app_dir }}/bin"
+    mode: 0777
+
+- name: "Start Kerberos database witn the command '/usr/sbin/krb5kdc -n &'"
+  shell: /usr/sbin/krb5kdc -n &
+  when: "'{{ inventory_hostname[-1] }}' == '1'"
+
+- name: Create the /etc/systemd/system/krb5kdc.service
+  copy:
+    src: files/krb5kdc.service
+    dest: /etc/systemd/system/krb5kdc.service

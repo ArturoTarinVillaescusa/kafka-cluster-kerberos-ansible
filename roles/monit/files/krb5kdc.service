@@ -1,0 +1,14 @@
+[Unit]
+Description=Zookeeper Daemon
+Wants=syslog.target
+
+[Service]
+Type=forking
+WorkingDirectory=/usr/sbin
+User=root
+ExecStart=/usr/sbin/krb5kdc -n
+TimeoutSec=30
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+# The global variable file for a Kafka cluster installation
+kafka_version: kafka_2.12-1.1.0
+kafka_targz_file: "{{ kafka_version }}.tgz"
+kafka_targz_url: http://ftp.cixug.es/apache/kafka/1.1.0/{{ kafka_targz_file }}
+kafka_app_dir: /opt/kafka
+fqdn: "example.com"

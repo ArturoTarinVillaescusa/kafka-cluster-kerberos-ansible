@@ -1,0 +1,11 @@
+---
+# Ntp installation and configuration
+
+- name: Install NTP
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - ntp
+

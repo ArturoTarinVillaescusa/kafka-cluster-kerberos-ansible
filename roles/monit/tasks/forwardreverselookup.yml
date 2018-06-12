@@ -1,0 +1,52 @@
+---
+# Forward and reverse lookup
+- name: Install bind9
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - bind9
+
+- name: Start the Bind service
+  shell: /etc/init.d/bind9 start
+
+- replace:
+    dest: "/etc/network/interfaces"
+    regexp: 'broker1'
+    replace: "{{ ansible_host }}"
+    backup: no
+
+- name: Clear dns-nameservers in /etc/network/interfaces
+  lineinfile:
+    dest: "/etc/network/interfaces"
+    regexp: "dns-nameservers"
+    state: absent
+
+- name: Inserting your host dns
+  lineinfile:
+    dest: "/etc/network/interfaces"
+    line: "dns-nameservers {{ ansible_host }}"
+    insertafter: EOF
+
+
+
+- name: Create the {{ bind_folder }}/named.conf.local file
+  template:
+    src: named.conf.local.j2
+    dest: "{{ bind_folder }}/named.conf.local"
+
+
+- name: Create the {{ bind_cache_folder }}/{{ bind_forward_file }} file
+  template:
+    src: bind_forward.j2
+    dest: "{{ bind_cache_folder }}/{{ bind_forward_file }}"
+
+
+- name: Create the {{ bind_cache_folder }}/{{ bind_reverse_file }} file
+  template:
+    src: bind_reverse.j2
+    dest: "{{ bind_cache_folder }}/{{ bind_reverse_file }}"
+
+- name: Restart the Bind service
+  shell: /etc/init.d/bind9 restart

@@ -1,0 +1,24 @@
+KafkaServer {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+    keyTab="{{ keytabs_folder }}/kafka.keytab"
+    principal="kafka/{{ inventory_hostname }}.{{ fqdn }}@{{ realm }}";
+};
+
+KafkaClient {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+    keyTab="{{ keytabs_folder }}/kafka.keytab"
+    principal="admin/{{ inventory_hostname }}.{{ fqdn }}@{{ realm }}";
+};
+
+Client {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+		useTicketCache=false
+    keyTab="{{ keytabs_folder }}/kafka.keytab"
+    principal="kafka/{{ inventory_hostname }}.{{ fqdn }}@{{ realm }}";
+};

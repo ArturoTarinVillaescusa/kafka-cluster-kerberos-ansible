@@ -1,0 +1,27 @@
+---
+# Monit installation and configuration
+
+- name: Install monit
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - monit
+
+- name: Enable automatically starting the Monit service
+  #command: systemctl enable monit
+  service:
+    name: monit
+    enabled: yes
+
+- name: Create the /etc/monit/conf-available/kafka file to monitor the Kafka process (https://mmonit.com/)
+  copy:
+    src: kafka
+    dest: /etc/monit/conf-available/kafka
+
+- name: Create the /etc/monit/conf-available/zoo file to monitor the Zookeeper process (https://mmonit.com/)
+  copy:
+    src: zoo
+    dest: /etc/monit/conf-available/zoo
+

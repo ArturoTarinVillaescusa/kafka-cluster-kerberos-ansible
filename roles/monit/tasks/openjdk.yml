@@ -1,0 +1,23 @@
+---
+# openjdk installation
+
+# Evita el error que ocurre cuando hacemos un restore a un snapshot antiguo de vmware
+# Quizás no ocurra en el entorno de GoldCar, pero por si acaso lo dejo comentado, para que
+# pueda superarse este problema en caso de que así ocurra el día de la instalación.
+
+# Unable to lock the administration directory (/var/lib/dpkg/), is another process using it?",
+#- name: Unlock the /var/lib/dpkg folder
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  with_items:
+#    - /var/lib/dpkg/lock
+
+- name: Install openjdk-8-jre-headless
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - openjdk-8-jre-headless
+

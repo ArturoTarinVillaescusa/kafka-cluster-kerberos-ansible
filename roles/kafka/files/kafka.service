@@ -1,0 +1,14 @@
+[Unit]
+Description=Kafka Daemon
+Wants=syslog.target
+
+[Service]
+Type=forking
+WorkingDirectory=/opt/kafka
+User=root
+ExecStart=/opt/kafka/bin/startKafkaWithKerberosConfiguration.sh
+TimeoutSec=30
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
