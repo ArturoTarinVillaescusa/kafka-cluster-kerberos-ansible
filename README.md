@@ -71,8 +71,6 @@ The cluster will be secured following the Confluent Kafka instructions given in
 
 [![IMAGE Secured Kafka cluster](https://cdn2.hubspot.net/hubfs/540072/blog-files/Apache_Kafka_Security_101.png)]
 
-![Alt text](images/securedarchitecture.png "Secured Kafka cluster")
-
 
 ## 5 Deploy the Kafka cluster in local VMWare Workstation machines
 -----------------------------------------------------------------------
@@ -463,38 +461,6 @@ Caused by: javax.security.auth.login.LoginException: Could not login: the client
 ```
 
 
-
-In my three node Kafka cluster I would issue these commands:
-
-```bash
-arturo@broker1:/opt/kafka$ /opt/kafka/bin/kafka-topics.sh --create --zookeeper broker1:2181,broker2:2181,broker3:2181 --replication-factor 3 --partitions 3 --topic test
-Created topic "test".
-
-arturo@broker2:/opt/kafka$ /opt/kafka/bin/kafka-topics.sh --describe --zookeeper broker1:2181,broker2:2181,broker3:2181 --topic test
-Topic:test	PartitionCount:3	ReplicationFactor:3	Configs:
-	Topic: test	Partition: 0	Leader: 3	Replicas: 3,1,2	Isr: 2,3
-	Topic: test	Partition: 1	Leader: 2	Replicas: 1,2,3	Isr: 2,3
-	Topic: test	Partition: 2	Leader: 2	Replicas: 2,3,1	Isr: 2,3
-
-arturo@broker3:/opt/kafka$ /opt/kafka/bin/kafka-topics.sh --list --zookeeper broker1:2181,broker2:2181,broker3:2181
-test
-
-
-arturo@broker1:/opt/kafka$ /opt/kafka/bin/kafka-console-producer.sh --broker-list broker1:9092,broker2:9092,broker3:9092 --topic test
->mensaje1
-mensaje2
-mensaje3
-
-arturo@broker2:/opt/kafka$ /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic test –from-beginning
-mensaje1
-mensaje2
-mensaje3
-
-arturo@broker3:/opt/kafka$ bin/kafka-console-consumer.sh --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic test –from-beginning
-mensaje1
-mensaje2
-mensaje3
-```
 
 ## 6 Testing fault tolerance
 ---------------------------------------------
