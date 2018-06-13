@@ -1,17 +1,14 @@
 #
 # Playbook to deploy KAFKA
 #
-# Variables:
-#
 # Then run the playbook, like this:
 #
-# IF YOU WANT TO RUN JUST ONE SINGLE KAFKA NODE:
+# ansible-playbook kafka.yml --ask-sudo-pass -k --become --become-method=sudo
 #
-# ansible-playbook kafka.yml --ask-sudo-pass -k --become --become-method=sudo --extra-vars "hosts_destination=broker1"
+# And that's it!.
 #
-# IF YOU WANT TO RUN A THREE NODE KAFKA CLUSTER:
-#
-# ansible-playbook kafka.yml --ask-sudo-pass -k --become --become-method=sudo --extra-vars "hosts_destination=kafkabrokers"
+# The command will provision a Kafka cluster, a Zookeeper cluster and a Kerberos server with the machines
+# referenced in the "hosts" file.
 
 ---
 - hosts: "{{ hosts_destination | default('kafkabrokers') }}"
