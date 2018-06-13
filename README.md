@@ -48,8 +48,7 @@ Three VMWare virtual machines whith this settings per broker:
 
     X = (message_size * messages_per_sec * seconds_messages_available * replication_factor) / num_brokers)
 
-Benchmarking Apache Kafka: 2 Million Writes Per Second (On Three Cheap Machines)
-https://engineering.linkedin.com/kafka/benchmarking-apache-kafka-2-million-writes-second-three-cheap-machines
+[Benchmarking Apache Kafka: 2 Million Writes Per Second (On Three Cheap Machines)](https://engineering.linkedin.com/kafka/benchmarking-apache-kafka-2-million-writes-second-three-cheap-machines)
 
 
 ## 3 Software requirements
@@ -545,7 +544,7 @@ root      23777      1 30 22:35 ?        00:00:02 java -Dzookeeper.log.dir=. -Dz
 ## 7 Acknowledgements
 ---------------------------------------------
 
-I would like to say thank you to Mr. Damien Gasparina and Mr. Leopold Delmouly, for their support on this and
-their knowledge shared in this link:
+I would like to say thank you to mr. Damien Gasparina and mr. Leopold Delmouly, from [Confluent](https://www.confluent.io/), for their support on this and
+their knowledge shared through this link:
 
 https://github.com/Dabz/kafka-security-playbook/tree/master/kerberos
